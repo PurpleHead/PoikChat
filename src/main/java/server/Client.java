@@ -57,6 +57,14 @@ public class Client extends Thread {
         return username;
     }
 
+    public PublicKey getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(PublicKey publicKey) {
+        this.publicKey = publicKey;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
