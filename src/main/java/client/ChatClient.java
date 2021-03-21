@@ -56,11 +56,13 @@ public class ChatClient extends Thread {
                     String username = inputStream.readUTF();
                     PublicKey publicKey = KeySerializer.fromString(inputStream.readUTF());
                     publicKeys.put(username, publicKey);
-                    System.out.println("Stored key from user " + username);
                 } else if (message.equals(ServerResponse.DISCARD_KEY)) {
                     String username = inputStream.readUTF();
                     publicKeys.remove(username);
-                    System.out.println("Removed stored key from: " + username);
+                } else if(message.equals(ServerResponse.ENCRYPTED_MESSAGE)) {
+                    System.out.println(inputStream.readUTF());
+                    String encryptedMessage = inputStream.readUTF();
+                    System.out.println(encryptedMessage);
                 } else {
                     System.out.println(message);
                 }

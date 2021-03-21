@@ -1,10 +1,13 @@
 package server;
 
+import constants.CommandConstants;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class Client extends Thread {
@@ -32,7 +35,21 @@ public class Client extends Thread {
                 DataInputStream inputStream = new DataInputStream(socket.getInputStream());
                 String message = inputStream.readUTF();
 
-                server.broadcast(this, message);
+                if(message.startsWith(CommandConstants.WHISPER)) {
+                    try {
+                        String[] split = message.split(" ");
+                        String messageBody = "";
+                        for(int i = 2; i < split.length; i++) {
+                            messageBody += split[i]  + " ";
+                        }
+                        server.sendDirectMessage(this, split[1], messageBody);
+                    } catch (IndexOutOfBoundsException e) {
+                        this.sendMessage(CommandConstants.WHISPER_TEMPLATE);
+                    }
+                } else {
+                    server.broadcast(this, message);
+                }
+
 
             } catch (IOException e) {
                 server.disconnect(this.username);
