@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.security.PublicKey;
 import java.util.Objects;
 
 public class Client extends Thread {
@@ -13,12 +14,14 @@ public class Client extends Thread {
     private boolean running;
     private String username;
     private DataOutputStream outputStream;
+    private PublicKey publicKey;
 
-    public Client (ChatServer server, Socket socket, String username) throws IOException {
+    public Client (ChatServer server, Socket socket, String username, PublicKey publicKey) throws IOException {
         this.server = server;
         this.socket = socket;
         this.running = true;
         this.username = username;
+        this.publicKey = publicKey;
         this.outputStream = new DataOutputStream(socket.getOutputStream());
     }
 

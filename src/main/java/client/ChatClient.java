@@ -5,6 +5,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 
 public class ChatClient extends Thread {
 
@@ -12,12 +16,16 @@ public class ChatClient extends Thread {
     private DataOutputStream outputStream;
     private DataInputStream inputStream;
     private boolean running;
+    private KeyPair keyPair;
 
-    public ChatClient (int port, String username) throws IOException {
-        socket = new Socket("localhost", port);
+    public ChatClient (int port, String username) throws IOException, NoSuchAlgorithmException {
+        this.socket = new Socket("localhost", port);
+        this.keyPair = ChatClient.generateKeyPair();
         this.inputStream = new DataInputStream(socket.getInputStream());
         this.outputStream = new DataOutputStream(socket.getOutputStream());
         this.outputStream.writeUTF(username);
+        System.out.println(keyPair.getPublic());
+        this.outputStream.writeUTF(Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()));
 
         try {
             String response = inputStream.readUTF();
@@ -45,6 +53,12 @@ public class ChatClient extends Thread {
                 System.exit(0);
             }
         }
+    }
+
+    public static KeyPair generateKeyPair () throws NoSuchAlgorithmException {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048);
+        return keyPairGenerator.generateKeyPair();
     }
 
     public void sendMessage (String message) throws IOException {

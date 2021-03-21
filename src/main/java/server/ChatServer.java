@@ -2,8 +2,15 @@ package server;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ChatServer extends Thread {
@@ -23,11 +30,16 @@ public class ChatServer extends Thread {
             try {
                 Socket socket = serverSocket.accept();
                 String socketID;
+                PublicKey publicKey;
                 DataInputStream inputStream = new DataInputStream(socket.getInputStream());
 
                 System.out.println("> Socket on address " + socket.getLocalAddress() + " is attempting to connect!");
                 socketID = inputStream.readUTF();
-                Client c = new Client(this, socket, socketID);
+                KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(inputStream.readUTF())));
+                System.out.println(publicKey);
+
+                Client c = new Client(this, socket, socketID, publicKey);
                 if(!clients.containsKey(socketID)) {
                     clients.put(socketID, c);
                     c.start();
@@ -40,7 +52,7 @@ public class ChatServer extends Thread {
                     System.out.println("> User \'" + socketID + "\' is already connected!");
                 }
 
-            } catch (IOException e) {
+            } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
                 e.printStackTrace();
             }
         }
