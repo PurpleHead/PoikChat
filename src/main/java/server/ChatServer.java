@@ -37,7 +37,7 @@ public class ChatServer extends Thread {
                 publicKey = KeySerializer.fromString(inputStream.readUTF());
 
                 Client c = new Client(this, socket, username, publicKey);
-                if(!clients.containsKey(username)) {
+                if(!clients.containsKey(username.toLowerCase())) {
                     clients.put(username.toLowerCase(), c);
                     c.start();
                     c.sendMessage(ServerResponse.CONNECTION_SUCCESS);
@@ -85,7 +85,7 @@ public class ChatServer extends Thread {
             receiverClient.sendMessage("<private> " + sender.getUsername() + " whispered to you: ");
             receiverClient.sendMessage(message);
         } else {
-            sender.sendMessage(CommandConstants.WHISPER_TEMPLATE);
+            sender.sendMessage("User " + receiver + " is not online!");
         }
     }
 

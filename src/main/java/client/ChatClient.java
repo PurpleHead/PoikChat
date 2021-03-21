@@ -1,5 +1,7 @@
 package client;
 
+import constants.CommandConstants;
+import encryption.MessageEncryptor;
 import serializers.KeySerializer;
 import server.ServerResponse;
 
@@ -8,11 +10,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
+import java.security.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ChatClient extends Thread {
@@ -27,7 +25,7 @@ public class ChatClient extends Thread {
 
     public ChatClient(int port, String username) throws IOException, NoSuchAlgorithmException {
         this.socket = new Socket("localhost", port);
-        this.keyPair = ChatClient.generateKeyPair();
+        this.keyPair = MessageEncryptor.generateKeyPair();
         this.inputStream = new DataInputStream(socket.getInputStream());
         this.outputStream = new DataOutputStream(socket.getOutputStream());
         this.outputStream.writeUTF(username);
@@ -55,18 +53,18 @@ public class ChatClient extends Thread {
                 if(message.equals(ServerResponse.STORE_KEY)) {
                     String username = inputStream.readUTF();
                     PublicKey publicKey = KeySerializer.fromString(inputStream.readUTF());
-                    publicKeys.put(username, publicKey);
+                    publicKeys.put(username.toLowerCase(), publicKey);
                 } else if (message.equals(ServerResponse.DISCARD_KEY)) {
                     String username = inputStream.readUTF();
-                    publicKeys.remove(username);
+                    publicKeys.remove(username.toLowerCase());
                 } else if(message.equals(ServerResponse.ENCRYPTED_MESSAGE)) {
                     System.out.println(inputStream.readUTF());
                     String encryptedMessage = inputStream.readUTF();
-                    System.out.println(encryptedMessage);
+                    System.out.println(MessageEncryptor.decryptMessage(encryptedMessage, keyPair.getPrivate()));
                 } else {
                     System.out.println(message);
                 }
-            } catch (IOException | InvalidKeySpecException | NoSuchAlgorithmException e) {
+            } catch (Exception e) {
                 System.out.println("Connection to server lost.");
                 this.running = false;
                 System.exit(0);
@@ -74,14 +72,25 @@ public class ChatClient extends Thread {
         }
     }
 
-    public static KeyPair generateKeyPair() throws NoSuchAlgorithmException {
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        keyPairGenerator.initialize(2048);
-        return keyPairGenerator.generateKeyPair();
-    }
-
     public void sendMessage(String message) throws IOException {
+        if(message.startsWith(CommandConstants.WHISPER)) {
+            String[] split = message.split(" ");
+            try {
+                String username = split[1].toLowerCase();
+                String messageBody = "";
+
+                for (int i = 2; i < split.length; i++) {
+                    messageBody += split[i] + " ";
+                }
+
+                String encryptedMessage = MessageEncryptor.encryptMessage(messageBody, publicKeys.get(username));
+                message = split[0] + " " + username + " " + encryptedMessage;
+            } catch (Exception e) {
+                System.out.println(CommandConstants.WHISPER_TEMPLATE);
+            }
+        }
         this.outputStream.writeUTF(message);
+
     }
 
     public boolean isRunning() {

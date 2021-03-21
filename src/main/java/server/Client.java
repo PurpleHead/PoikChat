@@ -38,11 +38,7 @@ public class Client extends Thread {
                 if(message.startsWith(CommandConstants.WHISPER)) {
                     try {
                         String[] split = message.split(" ");
-                        String messageBody = "";
-                        for(int i = 2; i < split.length; i++) {
-                            messageBody += split[i]  + " ";
-                        }
-                        server.sendDirectMessage(this, split[1], messageBody);
+                        server.sendDirectMessage(this, split[1], split[2]);
                     } catch (IndexOutOfBoundsException e) {
                         this.sendMessage(CommandConstants.WHISPER_TEMPLATE);
                     }

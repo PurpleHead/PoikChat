@@ -1,11 +1,9 @@
 package client;
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
 
 public class ClientMain {
-    public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
+    public static void main(String[] args) throws Exception {
         System.out.println("Please enter your username!");
         Scanner reader = new Scanner(System.in);
         String username = reader.nextLine();
